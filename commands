@@ -1,0 +1,103 @@
+
+openssl req -newkey rsa:2048 -new -x509 -days 365 -nodes -out mongodb-cert.crt -keyout mongodb-cert.key
+
+cat mongodb-cert.key mongodb-cert.crt > mongodb.pem
+
+
+##Generate CA cert
+openssl req -out ca.pem -new -x509 -days 365 -nodes -subj "/C=US/ST=California/O=Cousteau/CN=ITD/emailAddress=cousteau-dev@ciscoitd.com"
+
+##Generate mongodb-server .pem file:
+
+hostname  # note down the value
+echo "00" > file.srl # two random digits number
+openssl genrsa -out mongodb-server.key 2048
+openssl req -key mongodb-server.key -new -out mongodb-server.csr -subj  "/C=US/ST=California/O=Cousteau/CN=ITD/CN=mongodb/emailAddress=cousteau-dev@ciscoitd.com"
+openssl x509 -req -in mongodb-server.csr -CA ca.pem -CAkey privkey.pem -CAserial file.srl -out mongodb-server.crt -days 365
+cat mongodb-server.key mongodb-server.crt > mongodb-server.pem
+openssl verify -CAfile ca.pem mongodb-server.pem
+
+##Now let's generate client.pem file:
+
+openssl genrsa -out client.key 2048
+openssl req -key client.key -new -out client.csr -subj "/C=US/ST=California/O=Cousteau/CN=ITD/CN=mongodb/emailAddress=cousteau-dev@ciscoitd.com"
+openssl x509 -req -in client.csr -CA ca.pem -CAkey privkey.pem -CAserial file.srl -out client.crt -days 365
+cat client.key client.crt > client.pem
+openssl verify -CAfile ca.pem client.pem
+
+
+##After generating the .pem files, now you can run mongod. for example:
+
+mongod --sslMode requireSSL --sslPEMKeyFile ~/server.pem --sslCAFile ~/ca.pem
+
+##You can test the connection using the mongo shell, for example:
+
+mongo --ssl --sslPEMKeyFile /home/sathech/client.pem --sslCAFile /home/sathech/ca.pem --host test-mongodb-arbiter-0  --sslAllowInvalidHostnames
+
+##Once you can get connected successfully, you can try with PyMongo. For example:
+
+import ssl
+from pymongo import MongoClient
+client = MongoClient(
+    '<server hostname>',
+    27017,
+    ssl=True,
+    ssl_certfile='~/client.pem',
+    ssl_cert_reqs=ssl.CERT_REQUIRED,
+    ssl_ca_certs='~/ca.pem'
+ )
+
+Alternatively, you can also use mongod flag --sslAllowInvalidHostnames to specify localhost, etc.
+
+
+
+
+http://pe-kay.blogspot.com/2016/02/securing-mongodb-using-x509-certificate.html
+http://www.developersite.org/103-87869-python
+
+
+
+Mongodb Default Port: 27017
+Mongodb default Http Port : 28017 (27017+1000)
+
+http://localhost:28017
+curl -k https://localhost:28017/       --cacert /home/sathech/ca.pem  --cert /home/sathech/client.pem
+
+Validate Cluster: mongo --eval 'printjson(rs.status())' 
+
+
+
+service mongod  status/stop/start
+
+conf location: /etc/mongod.conf
+
+# network interfaces
+net:
+  port: 27017
+  bindIp: 0.0.0.0
+  http:
+    enabled: true
+    JSONPEnabled: true
+    RESTInterfaceEnabled: true
+  ssl:
+    mode: requireSSL
+    PEMKeyFile: /opt/cousteau/credentials/mongodb-server.pem
+    CAFile: /opt/cousteau/credentials/ca.pem
+    allowInvalidHostnames: true
+    clusterFile: /opt/cousteau/credentials/mongodb-server.pem
+
+security:
+  clusterAuthMode: x509
+
+
+
+mongo --ssl --sslPEMKeyFile /home/sathech/client.pem --sslCAFile /home/sathech/ca.pem --host test-mongodb-arbiter-0  --sslAllowInvalidHostnames
+
+
+db.getSiblingDB("$external").auth(
+  {
+    mechanism: "MONGODB-X509",
+    user: "emailAddress=cousteau-dev@ciscoitd.com,CN=mongodb,CN=ITD,O=Cousteau,ST=California,C=US"
+  }
+)
+
