@@ -82,9 +82,12 @@ net:
   ssl:
     mode: requireSSL
     PEMKeyFile: /opt/cousteau/credentials/mongodb-server.pem
+    PEMKeyPassword: <string>
     CAFile: /opt/cousteau/credentials/ca.pem
     allowInvalidHostnames: true
     clusterFile: /opt/cousteau/credentials/mongodb-server.pem
+    clusterPassword: <string>
+    PEMKeyPassword: <string>
 
 security:
   clusterAuthMode: x509
