@@ -87,7 +87,6 @@ net:
     allowInvalidHostnames: true
     clusterFile: /opt/cousteau/credentials/mongodb-server.pem
     clusterPassword: <string>
-    PEMKeyPassword: <string>
 
 security:
   clusterAuthMode: x509
