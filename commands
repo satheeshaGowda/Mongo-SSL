@@ -103,3 +103,4 @@ db.getSiblingDB("$external").auth(
   }
 )
 
+http://stackoverflow.com/questions/42355417/connecting-to-mongodb-from-spring-boot-app-using-ssl
