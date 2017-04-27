@@ -103,4 +103,8 @@ db.getSiblingDB("$external").auth(
   }
 )
 
+References:
 http://stackoverflow.com/questions/42355417/connecting-to-mongodb-from-spring-boot-app-using-ssl
+https://docs.mongodb.com/manual/security/
+Java  - https://www.compose.com/articles/how-to-connecting-to-compose-mongodb-with-java-and-ssl/
+Go - https://www.compose.com/articles/connect-to-mongo-3-2-on-compose-from-golang/
