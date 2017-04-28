@@ -95,7 +95,7 @@ security:
 
 mongo --ssl --sslPEMKeyFile /home/sathech/client.pem --sslCAFile /home/sathech/ca.pem --host test-mongodb-arbiter-0  --sslAllowInvalidHostnames
 
-
+http://mongodb.github.io/mongo-java-driver/3.0/driver/reference/connecting/ssl/?_ga=1.55457708.687013215.1491637427
 db.getSiblingDB("$external").auth(
   {
     mechanism: "MONGODB-X509",
